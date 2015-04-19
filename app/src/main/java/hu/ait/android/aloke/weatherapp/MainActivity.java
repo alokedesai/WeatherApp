@@ -11,7 +11,10 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -63,6 +66,9 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
     private GoogleApiClient googleApiClient;
     private PlacesAutoCompleteAdapter adapter;
 
+    // for the loading spinner
+    private RelativeLayout relativeLayoutMain;
+    private ProgressBar pbContent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +78,9 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
         toolbarMain = (Toolbar) findViewById(R.id.toolbarMain);
         toolbarMain.setTitle("");
         setSupportActionBar(toolbarMain);
+
+        relativeLayoutMain = (RelativeLayout) findViewById(R.id.relativeLayoutMain);
+        pbContent = (ProgressBar) findViewById(R.id.pbContent);
 
         getWeather("Budapest");
 
@@ -84,6 +93,8 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
         tvSunset = (TextView) findViewById(R.id.tvSunset);
 
         ivWeatherIcon = (ImageView) findViewById(R.id.ivWeatherIcon);
+
+
 
         if (googleApiClient == null) {
             rebuildGoogleApiClient();
@@ -127,6 +138,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
             System.out.println("the JSON response: " + rawResult);
 
             try {
+                stopSpinner();
                 JSONObject rawJson = new JSONObject(rawResult);
 
                 if (rawJson.has("weather")) {
@@ -235,7 +247,9 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
 
     }
 
+    // TODO: delete this
     public void getWeather(String city) {
+        startSpinner();
         String url = null;
         try {
             url = String.format(URL_BASE, URLEncoder.encode(city, "UTF-8"));
@@ -247,6 +261,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
     }
 
     public void getWeatherFromLatLng(LatLng coordinates) {
+        startSpinner();
         String url = null;
 
         url = String.format(LAT_LNG_URL_BASE, coordinates.latitude, coordinates.longitude);
@@ -281,6 +296,16 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
 
     public GoogleApiClient getGoogleApiClient() {
         return googleApiClient;
+    }
+
+    private void startSpinner() {
+        relativeLayoutMain.setVisibility(View.GONE);
+        pbContent.setVisibility(View.VISIBLE);
+    }
+
+    private void stopSpinner() {
+        relativeLayoutMain.setVisibility(View.VISIBLE);
+        pbContent.setVisibility(View.GONE);
     }
 }
 
