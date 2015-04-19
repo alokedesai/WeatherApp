@@ -13,8 +13,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.places.Places;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,12 +32,15 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+import hu.ait.android.aloke.weatherapp.adapter.PlacesAutoCompleteAdapter;
 import hu.ait.android.aloke.weatherapp.fragment.SearchDialog;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
     public static final String URL_BASE = "http://api.openweathermap.org/data/2.5/weather?q=%s&units=imperial";
     private static final String IMG_URL_BASE = "http://openweathermap.org/img/w/%s.png";
+    private static final LatLngBounds BOUNDS_GREATER_SYDNEY = new LatLngBounds(
+            new LatLng(-34.041458, 150.790100), new LatLng(-33.682247, 151.383362));
 
     private TextView tvTemp;
     private TextView tvLowTemp;
@@ -44,6 +53,10 @@ public class MainActivity extends ActionBarActivity {
     private ImageView ivWeatherIcon;
 
     private Toolbar toolbarMain;
+
+    private GoogleApiClient googleApiClient;
+    private PlacesAutoCompleteAdapter adapter;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +78,20 @@ public class MainActivity extends ActionBarActivity {
         tvSunset = (TextView) findViewById(R.id.tvSunset);
 
         ivWeatherIcon = (ImageView) findViewById(R.id.ivWeatherIcon);
+
+        if (googleApiClient == null) {
+            rebuildGoogleApiClient();
+        }
+
+        adapter = new PlacesAutoCompleteAdapter(this, android.R.layout.simple_list_item_1, BOUNDS_GREATER_SYDNEY, null);
+    }
+
+    private void rebuildGoogleApiClient() {
+        googleApiClient = new GoogleApiClient.Builder(this)
+                .enableAutoManage(this, 0 /* clientId */, this)
+                .addConnectionCallbacks(this)
+                .addApi(Places.GEO_DATA_API)
+                .build();
     }
 
     @Override
@@ -203,6 +230,34 @@ public class MainActivity extends ActionBarActivity {
         }
         AsyncTask<String, Void, String> getWeather = new GetWeather(MainActivity.this);
         getWeather.execute(url);
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Toast.makeText(this,
+                "Could not connect to Google API Client: Error " + connectionResult.getErrorCode(),
+                Toast.LENGTH_SHORT).show();
+
+        // Disable API access in the adapter because the client was not initialised correctly.
+        adapter.setGoogleApiClient(null);
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        adapter.setGoogleApiClient(googleApiClient);
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        adapter.setGoogleApiClient(null);
+    }
+
+    public PlacesAutoCompleteAdapter getAdapter() {
+        return adapter;
+    }
+
+    public GoogleApiClient getGoogleApiClient() {
+        return googleApiClient;
     }
 }
 
