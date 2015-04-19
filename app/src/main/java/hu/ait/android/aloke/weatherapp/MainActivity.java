@@ -43,6 +43,7 @@ import hu.ait.android.aloke.weatherapp.fragment.SearchDialog;
 
 public class MainActivity extends ActionBarActivity implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
     public static final String URL_BASE = "http://api.openweathermap.org/data/2.5/weather?q=%s&units=imperial";
+    public static final String LAT_LNG_URL_BASE = "http://api.openweathermap.org/data/2.5/weather?lat=%f&lon=%f&units=imperial";
     private static final String IMG_URL_BASE = "http://openweathermap.org/img/w/%s.png";
     private static final LatLngBounds BOUNDS_WORLD = new LatLngBounds(
             new LatLng(-90, -180), new LatLng(90, 180));
@@ -123,12 +124,17 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
         @Override
         public void onReceive(Context context, Intent intent) {
             String rawResult = intent.getStringExtra(GetWeather.KEY_RESULT);
+            System.out.println("the JSON response: " + rawResult);
 
             try {
                 JSONObject rawJson = new JSONObject(rawResult);
 
-                String imgName = rawJson.getJSONArray("weather").getJSONObject(0).getString("icon");
-                Glide.with(MainActivity.this).load(String.format(IMG_URL_BASE, imgName)).into(ivWeatherIcon);
+                if (rawJson.has("weather")) {
+                    String imgName = rawJson.getJSONArray("weather").getJSONObject(0).getString("icon");
+                    Glide.with(MainActivity.this).load(String.format(IMG_URL_BASE, imgName)).into(ivWeatherIcon);
+                    toolbarMain.setSubtitle(rawJson.getJSONArray("weather").getJSONObject(0).getString("description"));
+                }
+
 
                 JSONObject mainTemp = rawJson.getJSONObject("main");
                 JSONObject sys = rawJson.getJSONObject("sys");
@@ -150,7 +156,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
 
                 //TODO: clean this up
                 toolbarMain.setTitle(rawJson.getString("name"));
-                toolbarMain.setSubtitle(rawJson.getJSONArray("weather").getJSONObject(0).getString("description"));
                 setToolbarColor(temp);
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -237,6 +242,15 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
+        AsyncTask<String, Void, String> getWeather = new GetWeather(MainActivity.this);
+        getWeather.execute(url);
+    }
+
+    public void getWeatherFromLatLng(LatLng coordinates) {
+        String url = null;
+
+        url = String.format(LAT_LNG_URL_BASE, coordinates.latitude, coordinates.longitude);
+        System.out.println("the url is " + url);
         AsyncTask<String, Void, String> getWeather = new GetWeather(MainActivity.this);
         getWeather.execute(url);
     }
