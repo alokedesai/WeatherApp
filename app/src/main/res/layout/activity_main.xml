@@ -15,7 +15,7 @@
         android:paddingLeft="72dp"
         android:paddingBottom="16dp"
         android:gravity="bottom"
-        app:titleTextAppearance="@style/Toolbartitle"
+        app:titleTextAppearance="@style/ToolbarTitle"
         app:subtitleTextAppearance="@style/ToolbarSubtitle"
         app:theme="@style/ThemeOverlay.AppCompat.Light"
         android:title="@string/location_placeholder_toolbar"
@@ -26,17 +26,41 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:id="@+id/l1"
+        android:id="@+id/linearLayout1"
         android:orientation="vertical">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             style="@style/TextAppearance.AppCompat.Display4"
-            android:id="@+id/temp"
+            android:id="@+id/tvTemp"
             android:text="0"
             android:layout_marginTop="10dp"
             />
+
+        <LinearLayout
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:id="@+id/tvLowTemp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="/"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:id="@+id/tvHighTemp"/>
+        </LinearLayout>
 
         <View
             android:layout_width="fill_parent"
@@ -49,7 +73,7 @@
         <ImageView
             android:layout_width="64dp"
             android:layout_height="64dp"
-            android:id="@+id/weather_icon"
+            android:id="@+id/ivWeatherIcon"
             android:layout_marginTop="8dp"
             android:layout_gravity="center_horizontal"
             android:alpha="0.2"/>
@@ -76,40 +100,39 @@
             android:layout_height="wrap_content"
             style="@style/TextAppearance.AppCompat.Small"
             android:text="hum"
-            android:id="@+id/hum"
-            />
-
-
-        <ImageView
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:layout_marginLeft="8dp"
-            android:src="@drawable/pressure"
-            />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            style="@style/TextAppearance.AppCompat.Small"
-            android:text="press"
-            android:layout_marginLeft="8dp"
-            android:id="@+id/pressure"
+            android:id="@+id/tvHumidity"
             />
 
         <ImageView
             android:layout_width="16dp"
             android:layout_height="16dp"
             android:layout_marginLeft="8dp"
-            android:src="@drawable/wind"
+            android:src="@drawable/sunrise"
             />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             style="@style/TextAppearance.AppCompat.Small"
-            android:text="wind"
+            android:text="sunrise"
             android:layout_marginLeft="8dp"
-            android:id="@+id/wind"
+            android:id="@+id/tvSunrise"
+            />
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginLeft="8dp"
+            android:src="@drawable/sunset"
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/TextAppearance.AppCompat.Small"
+            android:text="sunset"
+            android:layout_marginLeft="8dp"
+            android:id="@+id/tvSunset"
             />
 
     </LinearLayout>

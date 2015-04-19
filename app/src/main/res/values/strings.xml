@@ -9,5 +9,6 @@
     <string name="sunset_time">Sunset time</string>
     <string name="get_weather_button_text">Get the Weather</string>
     <string name="location_placeholder_toolbar">Finding Location</string>
+    <string name="weather_search_menu_text">Search</string>
 
 </resources>

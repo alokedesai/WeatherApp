@@ -11,46 +11,60 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
+import hu.ait.android.aloke.weatherapp.fragment.SearchDialog;
+
 
 public class MainActivity extends ActionBarActivity {
     public static final String URL_BASE = "http://api.openweathermap.org/data/2.5/weather?q=%s&units=imperial";
+    private static final String IMG_URL_BASE = "http://openweathermap.org/img/w/%s.png";
 
-    private TextView tvLowTemperature;
+    private TextView tvTemp;
+    private TextView tvLowTemp;
+    private TextView tvHighTemp;
+
+    private TextView tvHumidity;
+    private TextView tvSunrise;
+    private TextView tvSunset;
+
+    private ImageView ivWeatherIcon;
+
+    private Toolbar toolbarMain;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Toolbar toolbarMain = (Toolbar) findViewById(R.id.toolbarMain);
+        toolbarMain = (Toolbar) findViewById(R.id.toolbarMain);
         toolbarMain.setTitle("");
         setSupportActionBar(toolbarMain);
-//        final EditText etCityName = (EditText) findViewById(R.id.etCityName);
-//        Button btnGetWeather = (Button) findViewById(R.id.btnGetWeather);
-//        tvLowTemperature = (TextView) findViewById(R.id.tvLowTemperate);
-//
-//        btnGetWeather.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                // start the async task to get more the weather
-//                if (!"".equals(etCityName.getText().toString())) {
-//                    String url = String.format(URL_BASE, etCityName.getText());
-//
-//                    AsyncTask<String, Void, String> getWeather = new GetWeather(MainActivity.this);
-//                    getWeather.execute(url);
-//                }
-//
-//            }
-//        });
 
+        getWeather("Budapest");
+
+        tvTemp = (TextView) findViewById(R.id.tvTemp);
+        tvLowTemp = (TextView) findViewById(R.id.tvLowTemp);
+        tvHighTemp = (TextView) findViewById(R.id.tvHighTemp);
+
+        tvHumidity = (TextView) findViewById(R.id.tvHumidity);
+        tvSunrise = (TextView) findViewById(R.id.tvSunrise);
+        tvSunset = (TextView) findViewById(R.id.tvSunset);
+
+        ivWeatherIcon = (ImageView) findViewById(R.id.ivWeatherIcon);
     }
 
     @Override
@@ -76,14 +90,47 @@ public class MainActivity extends ActionBarActivity {
 
             try {
                 JSONObject rawJson = new JSONObject(rawResult);
-                String minTemp = rawJson.getJSONObject("main").getString("temp_min");
 
-                tvLowTemperature.setText(minTemp);
+                String imgName = rawJson.getJSONArray("weather").getJSONObject(0).getString("icon");
+                Glide.with(MainActivity.this).load(String.format(IMG_URL_BASE, imgName)).into(ivWeatherIcon);
+
+                JSONObject mainTemp = rawJson.getJSONObject("main");
+                JSONObject sys = rawJson.getJSONObject("sys");
+
+                double temp = mainTemp.getDouble("temp");
+
+                tvTemp.setText(mainTemp.getString("temp"));
+                tvLowTemp.setText(mainTemp.getString("temp_min"));
+                tvHighTemp.setText(mainTemp.getString("temp_max"));
+
+                tvHumidity.setText(mainTemp.getString("humidity"));
+
+                long unixSunrise = sys.getLong("sunrise");
+                String sunsetText = getDateFromLong(unixSunrise);
+                tvSunrise.setText(sunsetText);
+
+                long unixSunset = sys.getLong("sunset");
+                tvSunset.setText(getDateFromLong(unixSunset));
+
+                //TODO: clean this up
+                toolbarMain.setTitle(rawJson.getString("name"));
+                toolbarMain.setSubtitle(rawJson.getJSONArray("weather").getJSONObject(0).getString("description"));
+                setToolbarColor(temp);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
     };
+
+    private String getDateFromLong(long unixSunrise) {
+        Date sunriseDate = new Date(unixSunrise * 1000);
+
+        DateFormat df = new SimpleDateFormat("HH:mm");
+        df.setTimeZone(TimeZone.getDefault());
+
+        // representation of a date with the defined format.
+        return df.format(sunriseDate);
+    }
 
 
     @Override
@@ -100,13 +147,63 @@ public class MainActivity extends ActionBarActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id) {
+            case R.id.action_settings:
+                return true;
+            case R.id.action_search:
+                launchSearchDialog();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
+    }
 
-        return super.onOptionsItemSelected(item);
+    private void launchSearchDialog() {
+        SearchDialog dialog = new SearchDialog();
+        dialog.show(getSupportFragmentManager(), SearchDialog.TAG);
     }
 
 
+    private void setToolbarColor(double temp) {
+        int color;
+        if (temp < 0) {
+            color = getResources().getColor(R.color.primary_indigo);
+        } else if (temp < 10) {
+            color = getResources().getColor(R.color.primary_blue);
+        } else if (temp < 20) {
+            color = getResources().getColor(R.color.primary_light_blue);
+        } else if (temp < 30) {
+            color = getResources().getColor(R.color.primary_teal);
+        } else if (temp < 40) {
+            color = getResources().getColor(R.color.primary_light_green);
+        } else if (temp < 50) {
+            color = getResources().getColor(R.color.primary_green);
+        } else if (temp < 60) {
+            color = getResources().getColor(R.color.primary_lime);
+        } else if (temp < 70) {
+            color = getResources().getColor(R.color.primary_yellow);
+        } else if (temp < 80) {
+            color = getResources().getColor(R.color.primary_amber);
+        } else if (temp < 90) {
+            color = getResources().getColor(R.color.primary_orange);
+        } else {
+            color = getResources().getColor(R.color.primary_red);
+        }
+
+        toolbarMain.setBackgroundColor(color);
+
+    }
+
+    public void getWeather(String city) {
+        String url = null;
+        try {
+            url = String.format(URL_BASE, URLEncoder.encode(city, "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        AsyncTask<String, Void, String> getWeather = new GetWeather(MainActivity.this);
+        getWeather.execute(url);
+    }
 }
+
+
