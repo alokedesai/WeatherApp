@@ -8,6 +8,7 @@ import android.os.AsyncTask;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,23 +30,26 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final EditText etCityName = (EditText) findViewById(R.id.etCityName);
-        Button btnGetWeather = (Button) findViewById(R.id.btnGetWeather);
-        tvLowTemperature = (TextView) findViewById(R.id.tvLowTemperate);
-
-        btnGetWeather.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // start the async task to get more the weather
-                if (!"".equals(etCityName.getText().toString())) {
-                    String url = String.format(URL_BASE, etCityName.getText());
-
-                    AsyncTask<String, Void, String> getWeather = new GetWeather(MainActivity.this);
-                    getWeather.execute(url);
-                }
-
-            }
-        });
+        Toolbar toolbarMain = (Toolbar) findViewById(R.id.toolbarMain);
+        toolbarMain.setTitle("");
+        setSupportActionBar(toolbarMain);
+//        final EditText etCityName = (EditText) findViewById(R.id.etCityName);
+//        Button btnGetWeather = (Button) findViewById(R.id.btnGetWeather);
+//        tvLowTemperature = (TextView) findViewById(R.id.tvLowTemperate);
+//
+//        btnGetWeather.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                // start the async task to get more the weather
+//                if (!"".equals(etCityName.getText().toString())) {
+//                    String url = String.format(URL_BASE, etCityName.getText());
+//
+//                    AsyncTask<String, Void, String> getWeather = new GetWeather(MainActivity.this);
+//                    getWeather.execute(url);
+//                }
+//
+//            }
+//        });
 
     }
 
