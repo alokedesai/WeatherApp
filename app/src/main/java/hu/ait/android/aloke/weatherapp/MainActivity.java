@@ -18,6 +18,9 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.places.AutocompleteFilter;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.PlaceTypes;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -29,6 +32,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -39,8 +44,8 @@ import hu.ait.android.aloke.weatherapp.fragment.SearchDialog;
 public class MainActivity extends ActionBarActivity implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
     public static final String URL_BASE = "http://api.openweathermap.org/data/2.5/weather?q=%s&units=imperial";
     private static final String IMG_URL_BASE = "http://openweathermap.org/img/w/%s.png";
-    private static final LatLngBounds BOUNDS_GREATER_SYDNEY = new LatLngBounds(
-            new LatLng(-34.041458, 150.790100), new LatLng(-33.682247, 151.383362));
+    private static final LatLngBounds BOUNDS_WORLD = new LatLngBounds(
+            new LatLng(-90, -180), new LatLng(90, 180));
 
     private TextView tvTemp;
     private TextView tvLowTemp;
@@ -83,7 +88,11 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
             rebuildGoogleApiClient();
         }
 
-        adapter = new PlacesAutoCompleteAdapter(this, android.R.layout.simple_list_item_1, BOUNDS_GREATER_SYDNEY, null);
+        //TODO: uncomment when Google fixes this bug:
+        // https://github.com/googlesamples/android-play-places/issues/6
+        Collection<Integer> filterTypes = new ArrayList<Integer>();
+//        filterTypes.add(Place.TYPE_LOCALITY);
+        adapter = new PlacesAutoCompleteAdapter(this, android.R.layout.simple_list_item_1, BOUNDS_WORLD, AutocompleteFilter.create(filterTypes));
     }
 
     private void rebuildGoogleApiClient() {
