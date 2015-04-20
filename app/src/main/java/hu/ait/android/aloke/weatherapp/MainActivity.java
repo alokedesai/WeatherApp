@@ -54,6 +54,9 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
     public static final String URL_BASE = "http://api.openweathermap.org/data/2.5/weather?q=%s&units=imperial";
     public static final String LAT_LNG_URL_BASE = "http://api.openweathermap.org/data/2.5/weather?lat=%f&lon=%f&units=imperial";
     private static final String IMG_URL_BASE = "http://openweathermap.org/img/w/%s.png";
+
+    //the bounds for the world, we use this because we don't want Google Places to
+    //favorite any specific location
     private static final LatLngBounds BOUNDS_WORLD = new LatLngBounds(
             new LatLng(-90, -180), new LatLng(90, 180));
 
@@ -69,6 +72,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
 
     private Toolbar toolbarMain;
 
+    // fields to use the google places autocomplete
     private GoogleApiClient googleApiClient;
     private PlacesAutoCompleteAdapter adapter;
 
@@ -90,7 +94,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
         // https://github.com/googlesamples/android-play-places/issues/6
         Collection<Integer> filterTypes = new ArrayList<Integer>();
 //        filterTypes.add(Place.TYPE_LOCALITY);
-        adapter = new PlacesAutoCompleteAdapter(this, android.R.layout.simple_list_item_1, BOUNDS_WORLD, AutocompleteFilter.create(filterTypes));
+        adapter = new PlacesAutoCompleteAdapter(this, android.R.layout.simple_list_item_1, BOUNDS_WORLD, null);
 
 
         relativeLayoutMain = (RelativeLayout) findViewById(R.id.relativeLayoutMain);
@@ -125,7 +129,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
     protected void onResume() {
         super.onResume();
 
-        // subscrive to broadcast receiver
+        // subscribe to broadcast receiver
         LocalBroadcastManager.getInstance(this).registerReceiver(brWeatherReceiver, new IntentFilter(GetWeather.FILTER_RESULT));
     }
 
@@ -148,38 +152,51 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
                 JSONObject rawJson = new JSONObject(rawResult);
 
                 if (rawJson.has("weather")) {
-                    String imgName = rawJson.getJSONArray("weather").getJSONObject(0).getString("icon");
+                    JSONObject weatherJson = rawJson.getJSONArray("weather").getJSONObject(0);
+                    String imgName = weatherJson.getString("icon");
                     Glide.with(MainActivity.this).load(String.format(IMG_URL_BASE, imgName)).into(ivWeatherIcon);
-                    toolbarMain.setSubtitle(rawJson.getJSONArray("weather").getJSONObject(0).getString("description"));
+
+                    toolbarMain.setSubtitle(weatherJson.getString("description"));
                 }
 
 
                 JSONObject mainTemp = rawJson.getJSONObject("main");
                 JSONObject sys = rawJson.getJSONObject("sys");
 
-                double temp = mainTemp.getDouble("temp");
-
-                tvTemp.setText(mainTemp.getString("temp"));
-                tvLowTemp.setText(mainTemp.getString("temp_min"));
-                tvHighTemp.setText(mainTemp.getString("temp_max"));
+                setTempTextViews(mainTemp);
 
                 tvHumidity.setText(mainTemp.getString("humidity"));
 
-                long unixSunrise = sys.getLong("sunrise");
-                String sunsetText = getDateFromLong(unixSunrise);
-                tvSunrise.setText(sunsetText);
+                setSunsetTextView(sys);
+                setSunriseTextView(sys);
 
-                long unixSunset = sys.getLong("sunset");
-                tvSunset.setText(getDateFromLong(unixSunset));
-
-                //TODO: clean this up
+                // set the toolbar title and color
                 toolbarMain.setTitle(rawJson.getString("name"));
+                double temp = mainTemp.getDouble("temp");
                 setToolbarColor(temp);
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
     };
+
+    private void setSunriseTextView(JSONObject sys) throws JSONException {
+        long unixSunset = sys.getLong("sunset");
+        tvSunset.setText(getDateFromLong(unixSunset));
+    }
+
+    private void setSunsetTextView(JSONObject sys) throws JSONException {
+        long unixSunrise = sys.getLong("sunrise");
+        String sunsetText = getDateFromLong(unixSunrise);
+        tvSunrise.setText(sunsetText);
+    }
+
+    private void setTempTextViews(JSONObject mainTemp) throws JSONException {
+        tvTemp.setText(mainTemp.getString("temp"));
+        tvLowTemp.setText(mainTemp.getString("temp_min"));
+        tvHighTemp.setText(mainTemp.getString("temp_max"));
+    }
 
     private String getDateFromLong(long unixSunrise) {
         Date sunriseDate = new Date(unixSunrise * 1000);
@@ -262,6 +279,7 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
+        System.out.println("the url is " + url);
         AsyncTask<String, Void, String> getWeather = new GetWeather(MainActivity.this);
         getWeather.execute(url);
     }

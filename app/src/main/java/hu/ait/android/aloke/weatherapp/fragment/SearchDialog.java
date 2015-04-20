@@ -30,11 +30,16 @@ import hu.ait.android.aloke.weatherapp.adapter.PlacesAutoCompleteAdapter;
  */
 public class SearchDialog extends DialogFragment {
     public static final String TAG = "SearchDialog";
+
     private PlacesAutoCompleteAdapter adapter;
     private GoogleApiClient googleApiClient;
+
+    // the dialog that is created in onCreateDialog
     private AlertDialog dialog;
 
+    // the coordinates of the city that was chosen
     private LatLng cityCoordinates;
+
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -55,10 +60,8 @@ public class SearchDialog extends DialogFragment {
                 final String placeId = String.valueOf(item.placeId);
                 Log.i(TAG, "Autocomplete item selected: " + item.description);
 
-            /*
-             Issue a request to the Places Geo Data API to retrieve a Place object with additional
-              details about the place.
-              */
+                // Issue a request to the Places Geo Data API to retrieve a Place object
+                // with additional details about the place.
                 PendingResult<PlaceBuffer> placeResult = Places.GeoDataApi
                         .getPlaceById(googleApiClient, placeId);
                 placeResult.setResultCallback(new ResultCallback<PlaceBuffer>() {
@@ -69,6 +72,8 @@ public class SearchDialog extends DialogFragment {
                             cityCoordinates = place.getLatLng();
 
                         } else {
+                            // dismiss the dialog, the attempt at getting the coordinates of
+                            // the place was unsuccessful
                             dialog.dismiss();
                             Toast.makeText(getActivity(), "There was an error, please try again", Toast.LENGTH_SHORT).show();
                             return;
@@ -104,6 +109,8 @@ public class SearchDialog extends DialogFragment {
 
         dialog =  builder.create();
 
+        // Disable the ok button when the dialog is created. It's only able to be
+        // clicked when the coordinates are successfully reached
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
             public void onShow(DialogInterface dialog) {

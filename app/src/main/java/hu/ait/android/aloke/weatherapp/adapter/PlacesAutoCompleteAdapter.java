@@ -23,7 +23,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
-
+/**
+ * Adapter from the Google Places Complete sample app
+ * Note this code is NOT developed by me.
+ */
 public class PlacesAutoCompleteAdapter
         extends ArrayAdapter<PlacesAutoCompleteAdapter.PlaceAutocomplete> implements Filterable {
 
