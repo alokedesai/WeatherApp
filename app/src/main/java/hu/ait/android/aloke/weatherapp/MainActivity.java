@@ -76,8 +76,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
     private RelativeLayout relativeLayoutMain;
     private ProgressBar pbContent;
 
-    private AutoCompleteTextView tvCities;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -110,52 +108,10 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
 
         ivWeatherIcon = (ImageView) findViewById(R.id.ivWeatherIcon);
 
-        tvCities = (AutoCompleteTextView) findViewById(R.id.tvCities);
-        tvCities.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                final PlacesAutoCompleteAdapter.PlaceAutocomplete item = adapter.getItem(position);
-                final String placeId = String.valueOf(item.placeId);
-
-
-            /*
-             Issue a request to the Places Geo Data API to retrieve a Place object with additional
-              details about the place.
-              */
-                PendingResult<PlaceBuffer> placeResult = Places.GeoDataApi
-                        .getPlaceById(googleApiClient, placeId);
-                placeResult.setResultCallback(mUpdatePlaceDetailsCallback);
-
-                Toast.makeText(getApplicationContext(), "Clicked: " + item.description,
-                        Toast.LENGTH_SHORT).show();
-
-            }
-        });
-
-        tvCities.setAdapter(adapter);
-
         if (googleApiClient == null) {
             rebuildGoogleApiClient();
         }
     }
-
-
-    private ResultCallback<PlaceBuffer> mUpdatePlaceDetailsCallback
-            = new ResultCallback<PlaceBuffer>() {
-        @Override
-        public void onResult(PlaceBuffer places) {
-            if (!places.getStatus().isSuccess()) {
-                // Request did not complete successfully
-                System.out.println("Place query did not complete. Error: " + places.getStatus().toString());
-
-                return;
-            }
-            // Get the Place object from the buffer.
-            final Place place = places.get(0);
-
-            Toast.makeText(MainActivity.this, place.getAddress(), Toast.LENGTH_LONG).show();
-        }
-    };
 
     private void rebuildGoogleApiClient() {
         googleApiClient = new GoogleApiClient.Builder(this)
