@@ -9,9 +9,12 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -21,8 +24,11 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.PlaceBuffer;
 import com.google.android.gms.location.places.PlaceTypes;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.model.LatLng;
@@ -70,6 +76,8 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
     private RelativeLayout relativeLayoutMain;
     private ProgressBar pbContent;
 
+    private AutoCompleteTextView tvCities;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,6 +86,14 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
         toolbarMain = (Toolbar) findViewById(R.id.toolbarMain);
         toolbarMain.setTitle("");
         setSupportActionBar(toolbarMain);
+
+
+        //TODO: uncomment when Google fixes this bug:
+        // https://github.com/googlesamples/android-play-places/issues/6
+        Collection<Integer> filterTypes = new ArrayList<Integer>();
+//        filterTypes.add(Place.TYPE_LOCALITY);
+        adapter = new PlacesAutoCompleteAdapter(this, android.R.layout.simple_list_item_1, BOUNDS_WORLD, AutocompleteFilter.create(filterTypes));
+
 
         relativeLayoutMain = (RelativeLayout) findViewById(R.id.relativeLayoutMain);
         pbContent = (ProgressBar) findViewById(R.id.pbContent);
@@ -94,18 +110,52 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
 
         ivWeatherIcon = (ImageView) findViewById(R.id.ivWeatherIcon);
 
+        tvCities = (AutoCompleteTextView) findViewById(R.id.tvCities);
+        tvCities.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                final PlacesAutoCompleteAdapter.PlaceAutocomplete item = adapter.getItem(position);
+                final String placeId = String.valueOf(item.placeId);
 
+
+            /*
+             Issue a request to the Places Geo Data API to retrieve a Place object with additional
+              details about the place.
+              */
+                PendingResult<PlaceBuffer> placeResult = Places.GeoDataApi
+                        .getPlaceById(googleApiClient, placeId);
+                placeResult.setResultCallback(mUpdatePlaceDetailsCallback);
+
+                Toast.makeText(getApplicationContext(), "Clicked: " + item.description,
+                        Toast.LENGTH_SHORT).show();
+
+            }
+        });
+
+        tvCities.setAdapter(adapter);
 
         if (googleApiClient == null) {
             rebuildGoogleApiClient();
         }
-
-        //TODO: uncomment when Google fixes this bug:
-        // https://github.com/googlesamples/android-play-places/issues/6
-        Collection<Integer> filterTypes = new ArrayList<Integer>();
-//        filterTypes.add(Place.TYPE_LOCALITY);
-        adapter = new PlacesAutoCompleteAdapter(this, android.R.layout.simple_list_item_1, BOUNDS_WORLD, AutocompleteFilter.create(filterTypes));
     }
+
+
+    private ResultCallback<PlaceBuffer> mUpdatePlaceDetailsCallback
+            = new ResultCallback<PlaceBuffer>() {
+        @Override
+        public void onResult(PlaceBuffer places) {
+            if (!places.getStatus().isSuccess()) {
+                // Request did not complete successfully
+                System.out.println("Place query did not complete. Error: " + places.getStatus().toString());
+
+                return;
+            }
+            // Get the Place object from the buffer.
+            final Place place = places.get(0);
+
+            Toast.makeText(MainActivity.this, place.getAddress(), Toast.LENGTH_LONG).show();
+        }
+    };
 
     private void rebuildGoogleApiClient() {
         googleApiClient = new GoogleApiClient.Builder(this)
