@@ -18,15 +18,7 @@
         app:titleTextAppearance="@style/ToolbarTitle"
         app:subtitleTextAppearance="@style/ToolbarSubtitle"
         app:theme="@style/ThemeOverlay.AppCompat.Light"
-        android:title="@string/location_placeholder_toolbar">
-
-        <AutoCompleteTextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/tvCities"/>
-
-    </android.support.v7.widget.Toolbar>
-
+        android:title="@string/location_placeholder_toolbar" />
 
     <ProgressBar
         android:layout_width="wrap_content"
