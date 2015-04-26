@@ -95,7 +95,7 @@ public class PlacesAutoCompleteAdapter
     }
 
     /**
-     * Returns an item from the last autocomplete query.
+     * Returns an item from the last autocompmanilete query.
      */
     @Override
     public PlaceAutocomplete getItem(int position) {
@@ -119,6 +119,15 @@ public class PlacesAutoCompleteAdapter
                         // The API successfully returned results.
                         results.values = mResultList;
                         results.count = mResultList.size();
+
+                        if (mResultList != null && mResultList.size() > 0)
+                        {
+                            notifyDataSetChanged();
+                        }
+                        else
+                        {
+                            notifyDataSetInvalidated();
+                        }
                     }
                 }
                 return results;
