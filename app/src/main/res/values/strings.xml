@@ -10,5 +10,8 @@
     <string name="get_weather_button_text">Get the Weather</string>
     <string name="location_placeholder_toolbar">Finding Location</string>
     <string name="weather_search_menu_text">Search</string>
+    <string name="select_a_place_dialog_text">Select a place</string>
+    <string name="ok_dialog_button_text">OK</string>
+    <string name="cancel_dialog_text">Cancel</string>
 
 </resources>

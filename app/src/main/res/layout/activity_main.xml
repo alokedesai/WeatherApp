@@ -48,7 +48,6 @@
                 android:layout_height="wrap_content"
                 style="@style/TextAppearance.AppCompat.Display4"
                 android:id="@+id/tvTemp"
-                android:text="0"
                 android:layout_marginTop="10dp"
                 />
 
@@ -61,7 +60,6 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="0"
                     android:id="@+id/tvLowTemp"/>
 
                 <TextView
@@ -72,7 +70,6 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="0"
                     android:id="@+id/tvHighTemp"/>
             </LinearLayout>
 
@@ -113,7 +110,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 style="@style/TextAppearance.AppCompat.Small"
-                android:text="hum"
                 android:id="@+id/tvHumidity"
                 />
 
@@ -128,7 +124,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 style="@style/TextAppearance.AppCompat.Small"
-                android:text="sunrise"
                 android:layout_marginLeft="8dp"
                 android:id="@+id/tvSunrise"
                 />
@@ -144,7 +139,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 style="@style/TextAppearance.AppCompat.Small"
-                android:text="sunset"
                 android:layout_marginLeft="8dp"
                 android:id="@+id/tvSunset"
                 />

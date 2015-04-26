@@ -29,7 +29,6 @@ public class GetWeather extends AsyncTask<String, Void, String> {
     protected String doInBackground(String... params) {
         String result = "";
 
-        // network handling
         HttpURLConnection connection = null;
         InputStream is = null;
 
@@ -37,21 +36,11 @@ public class GetWeather extends AsyncTask<String, Void, String> {
             URL url = new URL(params[0]);
             connection = (HttpURLConnection) url.openConnection();
 
-            // set timeout values
-            connection.setConnectTimeout(10000);
-            connection.setReadTimeout(10000);
+            setTimeoutValues(connection);
 
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                int ch;
                 is = connection.getInputStream();
-
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-
-                while ((ch = is.read()) != -1) {
-                    bos.write(ch);
-                }
-
-                result = new String(bos.toByteArray(), "UTF-8");
+                result = getResultFromConnection(is);
             }
 
         } catch (IOException e) {
@@ -73,12 +62,27 @@ public class GetWeather extends AsyncTask<String, Void, String> {
         return result;
     }
 
+    private String getResultFromConnection(InputStream is) throws IOException {
+        int ch;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+
+        while ((ch = is.read()) != -1) {
+            bos.write(ch);
+        }
+
+        return new String(bos.toByteArray(), "UTF-8");
+    }
+
+    private void setTimeoutValues(HttpURLConnection connection) {
+        connection.setConnectTimeout(10000);
+        connection.setReadTimeout(10000);
+    }
+
     @Override
     protected void onPostExecute(String result) {
         Intent intentBrResult = new Intent(FILTER_RESULT);
         intentBrResult.putExtra("KEY_RESULT", result);
 
-        // how to send a local broadcast
         LocalBroadcastManager.getInstance(context).sendBroadcast(intentBrResult);
     }
 }

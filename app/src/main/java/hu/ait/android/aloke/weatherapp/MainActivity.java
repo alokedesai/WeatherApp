@@ -9,12 +9,9 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AutoCompleteTextView;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
@@ -24,12 +21,6 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.location.places.AutocompleteFilter;
-import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.PlaceBuffer;
-import com.google.android.gms.location.places.PlaceTypes;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -37,12 +28,8 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -51,14 +38,15 @@ import hu.ait.android.aloke.weatherapp.fragment.SearchDialog;
 
 
 public class MainActivity extends ActionBarActivity implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
-    public static final String URL_BASE = "http://api.openweathermap.org/data/2.5/weather?q=%s&units=imperial";
-    public static final String LAT_LNG_URL_BASE = "http://api.openweathermap.org/data/2.5/weather?lat=%f&lon=%f&units=imperial";
+    public static final String URL_BASE = "http://api.openweathermap.org/data/2.5/weather?lat=%f&lon=%f&units=imperial";
     private static final String IMG_URL_BASE = "http://openweathermap.org/img/w/%s.png";
 
     //the bounds for the world, we use this because we don't want Google Places to
     //favorite any specific location
     private static final LatLngBounds BOUNDS_WORLD = new LatLngBounds(
             new LatLng(-90, -180), new LatLng(90, 180));
+
+    private final LatLng budapestCoordinates = new LatLng(47.4925, 19.0514);
 
     private TextView tvTemp;
     private TextView tvLowTemp;
@@ -76,7 +64,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
     private GoogleApiClient googleApiClient;
     private PlacesAutoCompleteAdapter adapter;
 
-    // for the loading spinner
     private RelativeLayout relativeLayoutMain;
     private ProgressBar pbContent;
 
@@ -85,23 +72,21 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        toolbarMain = (Toolbar) findViewById(R.id.toolbarMain);
-        toolbarMain.setTitle("");
-        setSupportActionBar(toolbarMain);
-
-
-        //TODO: uncomment when Google fixes this bug:
-        // https://github.com/googlesamples/android-play-places/issues/6
-        Collection<Integer> filterTypes = new ArrayList<Integer>();
-//        filterTypes.add(Place.TYPE_LOCALITY);
+        setToolbar();
         adapter = new PlacesAutoCompleteAdapter(this, android.R.layout.simple_list_item_1, BOUNDS_WORLD, null);
-
 
         relativeLayoutMain = (RelativeLayout) findViewById(R.id.relativeLayoutMain);
         pbContent = (ProgressBar) findViewById(R.id.pbContent);
 
-        getWeather("Budapest");
+        getWeatherFromLatLng(budapestCoordinates);
+        setWeatherViews();
 
+        if (googleApiClient == null) {
+            rebuildGoogleApiClient();
+        }
+    }
+
+    private void setWeatherViews() {
         tvTemp = (TextView) findViewById(R.id.tvTemp);
         tvLowTemp = (TextView) findViewById(R.id.tvLowTemp);
         tvHighTemp = (TextView) findViewById(R.id.tvHighTemp);
@@ -111,10 +96,12 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
         tvSunset = (TextView) findViewById(R.id.tvSunset);
 
         ivWeatherIcon = (ImageView) findViewById(R.id.ivWeatherIcon);
+    }
 
-        if (googleApiClient == null) {
-            rebuildGoogleApiClient();
-        }
+    private void setToolbar() {
+        toolbarMain = (Toolbar) findViewById(R.id.toolbarMain);
+        toolbarMain.setTitle("");
+        setSupportActionBar(toolbarMain);
     }
 
     private void rebuildGoogleApiClient() {
@@ -128,16 +115,12 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
     @Override
     protected void onResume() {
         super.onResume();
-
-        // subscribe to broadcast receiver
         LocalBroadcastManager.getInstance(this).registerReceiver(brWeatherReceiver, new IntentFilter(GetWeather.FILTER_RESULT));
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-
-        // unsubscribe from the broadcast receiver
         LocalBroadcastManager.getInstance(this).unregisterReceiver(brWeatherReceiver);
     }
 
@@ -145,7 +128,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
         @Override
         public void onReceive(Context context, Intent intent) {
             String rawResult = intent.getStringExtra(GetWeather.KEY_RESULT);
-            System.out.println("the JSON response: " + rawResult);
 
             try {
                 stopSpinner();
@@ -204,7 +186,6 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
         DateFormat df = new SimpleDateFormat("HH:mm");
         df.setTimeZone(TimeZone.getDefault());
 
-        // representation of a date with the defined format.
         return df.format(sunriseDate);
     }
 
@@ -223,15 +204,10 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        switch (id) {
-            case R.id.action_settings:
-                return true;
-            case R.id.action_search:
-                launchSearchDialog();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        if (id == R.id.action_search) {
+            launchSearchDialog();
         }
+        return true;
     }
 
     private void launchSearchDialog() {
@@ -270,26 +246,10 @@ public class MainActivity extends ActionBarActivity implements GoogleApiClient.O
 
     }
 
-    // TODO: delete this
-    public void getWeather(String city) {
-        startSpinner();
-        String url = null;
-        try {
-            url = String.format(URL_BASE, URLEncoder.encode(city, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        System.out.println("the url is " + url);
-        AsyncTask<String, Void, String> getWeather = new GetWeather(MainActivity.this);
-        getWeather.execute(url);
-    }
-
     public void getWeatherFromLatLng(LatLng coordinates) {
         startSpinner();
-        String url = null;
+        String url = String.format(URL_BASE, coordinates.latitude, coordinates.longitude);
 
-        url = String.format(LAT_LNG_URL_BASE, coordinates.latitude, coordinates.longitude);
-        System.out.println("the url is " + url);
         AsyncTask<String, Void, String> getWeather = new GetWeather(MainActivity.this);
         getWeather.execute(url);
     }
